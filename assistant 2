@@ -1,0 +1,110 @@
+import speech_recognition as sr
+import pyttsx3
+import pywhatkit
+import datetime
+import wikipedia
+import pyjokes
+import pyautogui
+import os
+import sys
+import webbrowser
+
+# Initialize text-to-speech engine
+engine = pyttsx3.init()
+engine.setProperty('rate', 170)
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id)  # Use voices[0].id for male voice
+
+# Speak the text
+def speak(text):
+    engine.say(text)
+    engine.runAndWait()
+
+# Take voice input
+def take_command():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+    try:
+        print("Recognizing...")
+        command = recognizer.recognize_google(audio)
+        print(f"You said: {command}")
+    except Exception:
+        speak("Sorry, I did not understand. Please say it again.")
+        return ""
+    return command.lower()
+
+# Main assistant logic
+def run_assistant():
+    speak("Hello, how can I help you?")
+    while True:
+        command = take_command()
+
+        if 'open vs code' in command:
+            os.system("start code")
+            speak("Opening Visual Studio Code")
+
+        elif 'open notepad' in command:
+            os.system("start notepad")
+            speak("Opening Notepad")
+
+        elif 'play' in command:
+            video = command.replace('play', '')
+            speak(f"Playing {video} on YouTube")
+            pywhatkit.playonyt(video)
+
+        elif 'time' in command:
+            time = datetime.datetime.now().strftime('%I:%M %p')
+            speak(f"The current time is {time}")
+
+        elif 'who is' in command:
+            person = command.replace('who is', '')
+            info = wikipedia.summary(person, sentences=2)
+            speak(info)
+
+        elif 'tell me a joke' in command:
+            joke = pyjokes.get_joke()
+            speak(joke)
+
+        elif 'screenshot' in command:
+            screenshot = pyautogui.screenshot()
+            screenshot.save("screenshot.png")
+            speak("Screenshot taken and saved as screenshot.png")
+
+        elif 'read me a book' in command or 'recommend a book' in command:
+            speak("Sure. How about 'The Alchemist by Paulo Coelho'? It's a great read.")
+
+        elif 'go to home' in command or 'home page' in command:
+            webbrowser.open(f"file:///C:/Users/{os.getlogin()}")
+            speak("Opening your home directory")
+
+        elif 'search' in command:
+            topic = command.replace('search', '').strip()
+            if topic:
+                speak(f"Should I search for {topic} on ChatGPT or Chrome?")
+                source = take_command()
+
+                if 'chat gpt' in source or 'chatgpt' in source:
+                    speak(f"Opening ChatGPT for {topic}")
+                    webbrowser.open(f"https://chat.openai.com/chat?q={topic}")
+
+                elif 'chrome' in source or 'google' in source:
+                    speak(f"Searching for {topic} on Google Chrome")
+                    webbrowser.open(f"https://www.google.com/search?q={topic}")
+
+                else:
+                    speak("I didn't catch the source. Please try again.")
+            else:
+                speak("What do you want me to search?")
+
+        elif 'exit' in command or 'stop' in command:
+            speak("Goodbye!")
+            sys.exit()
+
+        else:
+            speak("I am not sure how to help with that.")
+
+# Run the assistant
+run_assistant()
